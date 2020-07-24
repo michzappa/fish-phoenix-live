@@ -6,6 +6,7 @@ defmodule FishPhxLiveWeb.FishLive do
   def mount(_params, _session, socket) do
     socket =
       assign(socket,
+        joined_game: false,
         room_to_be_created: "",
         room_to_be_joined: "",
         joining_player_name: "",
@@ -44,6 +45,9 @@ defmodule FishPhxLiveWeb.FishLive do
       </ul>
       <p><%= @room_name %></p>
       <p><%= @player_name %></p>
+      <%= if @joined_game do %>
+        <p><%= @player.hand %></p>
+      <%end %>
     """
   end
 
@@ -78,6 +82,7 @@ defmodule FishPhxLiveWeb.FishLive do
             player_name: player_name,
             player: player
           )
+          socket = update(socket, :joined_game, fn _ -> true end)
         {:noreply, socket}
     end
   end
