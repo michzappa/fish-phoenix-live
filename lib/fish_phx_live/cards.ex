@@ -75,7 +75,7 @@ defmodule FishPhxLive.Cards do
   end
 
   # return the cards that can be asked by a player with the given hand
-  def player_can_ask_for_cards(hand) do
+  def cards_player_can_ask_for(hand) do
     halfsuits_in_hand(hand)
     # getting all the cards in all the halfsuits of each card in the hand
     |> Enum.flat_map(&get_cards_in_halfsuit_from_map/1)
