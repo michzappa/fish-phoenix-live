@@ -45,19 +45,17 @@ defmodule FishPhxLiveWeb.FishLive do
       </form>
 
       <form phx-submit="join-room">
-        <input type="text" name="room_name" value="<%= @room_to_be_joined %>"
-               placeholder="Room Name"/>
+        <select id="room-select" name="room_name">
+            <%= for room <- @all_rooms do %>
+              <option value="<%= room.name %>"><%= room.name %></option>
+            <% end %>
+          </select>
         <input type="text" name="player_name" value="<%= @joining_player_name %>"
                placeholder="Player Name"/>
         <button type="submit">
           Join Room
         </button>
       </form>
-      <ul>
-        <%= for room <- @all_rooms do %>
-            <li><%= room.name %> </li>
-        <% end %>
-      </ul>
 
       <%= if @joined_game do %>
         <p>Room Name: <%= @room_name %></p>
@@ -92,6 +90,7 @@ defmodule FishPhxLiveWeb.FishLive do
     PubSub.broadcast!(:fish_pubsub, "room:#{socket.assigns.room_name}", "update")
     {:noreply, socket}
   end
+
   # Create Room Event, making sure the field is not empty
   def handle_event(
         "create/delete-room",
