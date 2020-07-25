@@ -19,6 +19,7 @@ defmodule FishPhxLiveWeb.FishLive do
         all_rooms: Rooms.list_rooms(),
         # boolean for displaying values only relevant after the player has joined a game
         joined_game: false,
+        # "empty" initialization of game-related fields
         room_name: "",
         player_name: "",
         room: %{},
@@ -46,6 +47,7 @@ defmodule FishPhxLiveWeb.FishLive do
     {:ok, socket}
   end
 
+  # HTML template for Fish, with embedded elixir from the socket's assigns
   def render(assigns) do
     ~L"""
       <div class="App">
@@ -193,10 +195,10 @@ defmodule FishPhxLiveWeb.FishLive do
     IO.inspect(socket.assigns.team.id)
     case Teams.make_claim(socket.assigns.team.id, player_card_map) do
       :not_in_play ->
-        socket = put_flash(socket, :error, "the specified cards are not all in play")
+        socket = put_flash(socket, :error, "The specified cards are not all in play")
         {:noreply, socket}
       :invalid ->
-        socket = put_flash(socket, :error, "invalid claim")
+        socket = put_flash(socket, :error, "Invalid claim")
         {:noreply, socket}
       {:ok, _team} ->
         PubSub.broadcast!(:fish_pubsub, "room:#{socket.assigns.room_name}", "update")
@@ -302,6 +304,8 @@ defmodule FishPhxLiveWeb.FishLive do
     {:noreply, socket}
   end
 
+  # updates socket assigns from database, called when joining a game
+  # or whenever there is a PubSub update
   def update_socket_assigns(socket, room_name, player) do
     socket =
       assign(socket,
