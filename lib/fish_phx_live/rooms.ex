@@ -39,7 +39,7 @@ defmodule FishPhxLive.Rooms do
   # adds a room and its two teams
   def create_room(name) do
     case does_room_name_already_exist(name) do
-      true -> :error
+      true -> {:error, "Room #{name} already exists"}
       false -> insert_room(name)
     end
   end
@@ -73,28 +73,28 @@ defmodule FishPhxLive.Rooms do
   def add_player_to_room(room_name, player_name, _checked_duplicate = false)
       when is_bitstring(room_name) do
     room_id = get_room_by_name!(room_name).id
-    add_player_to_room(room_id, player_name, false)
+    add_player_to_room(room_name, room_id, player_name, false)
   end
 
   # adds player with given name to the given room id
-  def add_player_to_room(id, name, _checked_duplicate = false) do
-    case does_player_name_exist_in_room(id, name) do
-      true -> {:error, "duplicate player name, creation failed"}
-      false -> add_player_to_room(id, name, true)
+  def add_player_to_room(room_name, room_id, player_name, _checked_duplicate = false) do
+    case does_player_name_exist_in_room(room_id, player_name) do
+      true -> {:error, "Player #{player_name} already is in room #{room_name}"}
+      false -> add_player_to_room(room_name, room_id, player_name, true)
     end
   end
 
-  def add_player_to_room(id, name, _checked_duplicate = true) do
-    {team1ID, team2ID} = get_team_ids(id)
+  def add_player_to_room(_room_name, room_id, player_name, _checked_duplicate = true) do
+    {team1ID, team2ID} = get_team_ids(room_id)
 
     case :rand.uniform(2) do
-      1 -> add_to_team(name, team1ID, team2ID, id)
-      2 -> add_to_team(name, team2ID, team1ID, id)
+      1 -> add_to_team(player_name, team1ID, team2ID, room_id)
+      2 -> add_to_team(player_name, team2ID, team1ID, room_id)
     end
   end
 
-  defp does_player_name_exist_in_room(id, name) do
-    {team1ID, team2ID} = get_team_ids(id)
+  defp does_player_name_exist_in_room(room_id, player_name) do
+    {team1ID, team2ID} = get_team_ids(room_id)
 
     names_in_room =
       Repo.all(
@@ -103,7 +103,7 @@ defmodule FishPhxLive.Rooms do
           select: player.name
       )
 
-    Enum.member?(names_in_room, name)
+    Enum.member?(names_in_room, player_name)
   end
 
   defp add_to_team(name, desired_team, other_team, room_id) do

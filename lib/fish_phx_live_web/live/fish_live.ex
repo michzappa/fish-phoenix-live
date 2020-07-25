@@ -6,6 +6,8 @@ defmodule FishPhxLiveWeb.FishLive do
   alias FishPhxLive.Players
   alias Phoenix.PubSub
 
+  import Phoenix.LiveView
+
   def mount(_params, _session, socket) do
     socket =
       assign(socket,
@@ -24,7 +26,6 @@ defmodule FishPhxLiveWeb.FishLive do
         teammates: [],
         opponent_team: %{},
         opponents: [],
-
         asked_for_card: ""
       )
 
@@ -86,9 +87,20 @@ defmodule FishPhxLiveWeb.FishLive do
 
   # Ask for card event
   def handle_event("ask-for-card", %{"asked_player" => asked_player, "card" => card}, socket) do
-    Players.ask_for_card(socket.assigns.player.id, asked_player, card, socket.assigns.room.id)
-    PubSub.broadcast!(:fish_pubsub, "room:#{socket.assigns.room_name}", "update")
-    {:noreply, socket}
+    case Players.ask_for_card(
+           socket.assigns.player.id,
+           asked_player,
+           card,
+           socket.assigns.room.id
+         ) do
+      {:error, reason} ->
+        socket = put_flash(socket, :error, reason)
+        {:noreply, socket}
+
+      _ ->
+        PubSub.broadcast!(:fish_pubsub, "room:#{socket.assigns.room_name}", "update")
+        {:noreply, socket}
+    end
   end
 
   # Create Room Event, making sure the field is not empty
@@ -115,9 +127,15 @@ defmodule FishPhxLiveWeb.FishLive do
         %{"room_to_be_created" => room_name, "room_to_be_deleted" => ""},
         socket
       ) do
-    Rooms.create_room(room_name)
-    socket = update(socket, :all_rooms, fn _old_list -> Rooms.list_rooms() end)
-    {:noreply, socket}
+    case Rooms.create_room(room_name) do
+      {:error, reason} ->
+        socket = put_flash(socket, :error, reason)
+        {:noreply, socket}
+
+      _ ->
+        socket = update(socket, :all_rooms, fn _old_list -> Rooms.list_rooms() end)
+        {:noreply, socket}
+    end
   end
 
   # Joining room event, making sure both fields are not empty upon submission
@@ -129,7 +147,8 @@ defmodule FishPhxLiveWeb.FishLive do
 
   def handle_event("join-room", %{"room_name" => room_name, "player_name" => player_name}, socket) do
     case Rooms.add_player_to_room(room_name, player_name, false) do
-      {:error, _reason} ->
+      {:error, reason} ->
+        socket = put_flash(socket, :error, reason)
         {:noreply, socket}
 
       player ->
