@@ -19,7 +19,6 @@ defmodule FishPhxLiveWeb.Router do
 
     live "/", PageLive, :index
     live "/fish", FishLive, :index
-    live "/test", TestLive, :index
   end
 
   # Other scopes may use custom stacks.
