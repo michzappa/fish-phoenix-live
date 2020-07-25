@@ -44,6 +44,7 @@ defmodule FishPhxLiveWeb.FishLive do
         selected_claim_halfsuit: 8
       )
 
+    PubSub.subscribe(:fish_pubsub, "fish")
     {:ok, socket}
   end
 
@@ -201,7 +202,7 @@ defmodule FishPhxLiveWeb.FishLive do
         socket = put_flash(socket, :error, "Invalid claim")
         {:noreply, socket}
       {:ok, _team} ->
-        PubSub.broadcast!(:fish_pubsub, "room:#{socket.assigns.room_name}", "update")
+        PubSub.broadcast!(:fish_pubsub, "room:#{socket.assigns.room_name}", "update-room")
         {:noreply, socket}
     end
   end
@@ -230,7 +231,7 @@ defmodule FishPhxLiveWeb.FishLive do
         {:noreply, socket}
 
       _ ->
-        PubSub.broadcast!(:fish_pubsub, "room:#{socket.assigns.room_name}", "update")
+        PubSub.broadcast!(:fish_pubsub, "room:#{socket.assigns.room_name}", "update-room")
         {:noreply, socket}
     end
   end
@@ -251,6 +252,7 @@ defmodule FishPhxLiveWeb.FishLive do
       ) do
     Rooms.delete_room(room_name)
     socket = update(socket, :all_rooms, fn _old_list -> Rooms.list_rooms() end)
+    PubSub.broadcast!(:fish_pubsub, "fish" ,"update-rooms")
     {:noreply, socket}
   end
 
@@ -266,6 +268,7 @@ defmodule FishPhxLiveWeb.FishLive do
 
       _ ->
         socket = update(socket, :all_rooms, fn _old_list -> Rooms.list_rooms() end)
+        PubSub.broadcast!(:fish_pubsub, "fish" ,"update-rooms")
         {:noreply, socket}
     end
   end
@@ -288,18 +291,25 @@ defmodule FishPhxLiveWeb.FishLive do
 
         socket = assign(socket, :joined_game, true)
         PubSub.subscribe(:fish_pubsub, "room:#{room_name}")
-        PubSub.broadcast!(:fish_pubsub, "room:#{room_name}", "update")
+        PubSub.broadcast!(:fish_pubsub, "room:#{room_name}", "update-room")
         {:noreply, socket}
     end
   end
 
-  def handle_info("update", socket) do
+  def handle_info("update-room", socket) do
     socket =
       update_socket_assigns(
         socket,
         socket.assigns.room_name,
         socket.assigns.player
       )
+
+    {:noreply, socket}
+  end
+
+  # refreshes room list from database
+  def handle_info("update-rooms", socket) do
+    socket = assign(socket, all_rooms: Rooms.list_rooms())
 
     {:noreply, socket}
   end
