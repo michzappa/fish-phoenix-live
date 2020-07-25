@@ -113,7 +113,7 @@ defmodule FishPhxLive.Rooms do
     # Logger.info(other_team_size)
 
     cond do
-      desired_team_size > 2 and other_team_size > 2 -> {:error, "both teams full"}
+      desired_team_size > 2 and other_team_size > 2 -> {:error, "Both teams are full"}
       desired_team_size < 3 -> Players.add_player_to_team(desired_team, name, room_id)
       true -> Players.add_player_to_team(other_team, name, room_id)
     end

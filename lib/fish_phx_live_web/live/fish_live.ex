@@ -34,54 +34,67 @@ defmodule FishPhxLiveWeb.FishLive do
 
   def render(assigns) do
     ~L"""
-      <h1>Fish</h1>
-      <form phx-submit="create/delete-room">
-        <input type="text" name="room_to_be_created" value="<%= @room_to_be_created %>"
-              placeholder="Room to be Created"/>
-        <input type="text" name="room_to_be_deleted" value="<%= @room_to_be_deleted %>"
-              placeholder="Room to be Deleted"/>
-        <button type="submit">
-          Submit
-        </button>
-      </form>
-
-      <form phx-submit="join-room">
-        <select id="room-select" name="room_name">
-            <%= for room <- @all_rooms do %>
-              <option value="<%= room.name %>"><%= room.name %></option>
-            <% end %>
-          </select>
-        <input type="text" name="player_name" value="<%= @joining_player_name %>"
-               placeholder="Player Name"/>
-        <button type="submit">
-          Join Room
-        </button>
-      </form>
-
-      <%= if @joined_game do %>
-        <p>Room Name: <%= @room_name %></p>
-        <p>Player Name: <%= @player_name %></p>
-        <p>Teammates: <%= Enum.join(Enum.map(@teammates, fn teammate -> teammate.name end),", ") %>
-        <p>Team Score: <%= Kernel.length(@team.claims) %> </p>
-        <p>Opponents: <%= Enum.join(Enum.map(@opponents, fn opponent -> opponent.name end),", ") %>
-        <p>Opponents Score: <%= Kernel.length(@opponent_team.claims) %> </p>
-        <p>Hand: <%= Enum.join(@player.hand, ", ") %></p>
-        <p>Last Move: <%= @room.move %></p>
-        <p>Current Turn: <%= @room.turn %></p>
-
-        <form phx-submit="ask-for-card">
-          <select id="opponents-select" name="asked_player">
-            <%= for opponent <- @opponents do %>
-              <option value="<%= opponent.id %>"><%= opponent.name %></option>
-            <% end %>
-          </select>
-          <input type="text" name="card" value="<%= @asked_for_card %>"
-                placeholder="Card"/>
+    <div class="App">
+      <header class="App-header">
+        <h1>Fish</h1>
+        <h4>By: Michael Zappa</h4>
+      <%= unless @joined_game do %>
+        <form phx-submit="create/delete-room">
+          <input type="text" name="room_to_be_created" value="<%= @room_to_be_created %>"
+                placeholder="Room to be Created"/>
+          <input type="text" name="room_to_be_deleted" value="<%= @room_to_be_deleted %>"
+                placeholder="Room to be Deleted"/>
           <button type="submit">
-            Ask For Card
+            Submit
           </button>
         </form>
-      <%end %>
+        <form phx-submit="join-room">
+          <select id="room-select" name="room_name">
+              <%= for room <- @all_rooms do %>
+                <option value="<%= room.name %>"><%= room.name %></option>
+              <% end %>
+            </select>
+          <input type="text" name="player_name" value="<%= @joining_player_name %>"
+                placeholder="Player Name"/>
+          <button type="submit">
+            Join Room
+          </button>
+        </form>
+      <%= end %>
+      </header>
+
+      <%= if @joined_game do %>
+        <div class="game-information">
+          <div class="game-stat">
+            <h1>Room Name: <%= @room_name %></h1>
+          </div>
+          <div class="game-stat">
+            <h2>
+              Teammates: <%= Enum.join(Enum.map(@teammates, fn teammate -> teammate.name end),", ") %>
+              <br></br>
+              Team Score: <%= Kernel.length(@team.claims) %>
+            </h2>
+          </div>
+          <div class="game-stat">
+            <h2>
+              Opponents: <%= Enum.join(Enum.map(@opponents, fn opponent -> opponent.name end),", ") %>
+              <br></br>
+              Opponents Score: <%= Kernel.length(@opponent_team.claims) %>
+            </h2>
+          </div>
+          <div class="game-stat">
+            <h1> <%= @player_name %>'s Hand</h1>
+            <p><%= Enum.join(@player.hand, ", ") %></p>
+          </div>
+          <div class="game-stat">
+            <h1>Last Move: <%= @room.move %></h1>
+          </div>
+          <div class="game-stat">
+            <h1>Current Turn: <%= @room.turn %></h1>
+          </div>
+        </div>
+      <%= end %>
+    </div>
     """
   end
 
