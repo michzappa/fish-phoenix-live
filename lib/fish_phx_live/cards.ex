@@ -102,7 +102,7 @@ defmodule FishPhxLive.Cards do
     |> Enum.uniq()
   end
 
-  # returns if all the cards currently exist in players hands in the current room
+  # returns if all the cards currently exist in player's hands in the current room
   def cards_are_in_play(room_id, cards) do
     List.foldr(cards, true, fn card, acc ->
       acc && is_card_in_play(room_id, card)

@@ -8,6 +8,7 @@ defmodule FishPhxLiveWeb.FishLive do
       assign(socket,
         joined_game: false,
         room_to_be_created: "",
+        room_to_be_deleted: "",
         room_to_be_joined: "",
         joining_player_name: "",
         room_name: "",
@@ -21,11 +22,13 @@ defmodule FishPhxLiveWeb.FishLive do
   def render(assigns) do
     ~L"""
       <h1>Fish</h1>
-      <form phx-submit="create-room">
-        <input type="text" name="room_name" value="<%= @room_to_be_created %>"
-              placeholder="Room Name"/>
+      <form phx-submit="create/delete-room">
+        <input type="text" name="room_to_be_created" value="<%= @room_to_be_created %>"
+              placeholder="Room to be Created"/>
+        <input type="text" name="room_to_be_deleted" value="<%= @room_to_be_deleted %>"
+              placeholder="Room to be Deleted"/>
         <button type="submit">
-          Create Room
+          Submit
         </button>
       </form>
 
@@ -52,11 +55,29 @@ defmodule FishPhxLiveWeb.FishLive do
   end
 
   # Create Room Event, making sure the field is not empty
-  def handle_event("create-room", %{"room_name" => ""}, socket) do
+  def handle_event(
+        "create/delete-room",
+        %{"room_to_be_created" => "", "room_to_be_deleted" => ""},
+        socket
+      ) do
     {:noreply, socket}
   end
 
-  def handle_event("create-room", %{"room_name" => room_name}, socket) do
+  def handle_event(
+        "create/delete-room",
+        %{"room_to_be_created" => "", "room_to_be_deleted" => room_name},
+        socket
+      ) do
+    Rooms.delete_room(room_name)
+    socket = update(socket, :all_rooms, fn _old_list -> Rooms.list_rooms() end)
+    {:noreply, socket}
+  end
+
+  def handle_event(
+        "create/delete-room",
+        %{"room_to_be_created" => room_name, "room_to_be_deleted" => ""},
+        socket
+      ) do
     Rooms.create_room(room_name)
     socket = update(socket, :all_rooms, fn _old_list -> Rooms.list_rooms() end)
     {:noreply, socket}
@@ -82,7 +103,8 @@ defmodule FishPhxLiveWeb.FishLive do
             player_name: player_name,
             player: player
           )
-          socket = update(socket, :joined_game, fn _ -> true end)
+
+        socket = update(socket, :joined_game, fn _ -> true end)
         {:noreply, socket}
     end
   end

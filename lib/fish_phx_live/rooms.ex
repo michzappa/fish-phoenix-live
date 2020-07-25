@@ -19,7 +19,7 @@ defmodule FishPhxLive.Rooms do
   end
 
   # deletes the specified room and its associated teams and players
-  def delete_room!(name) do
+  def delete_room(name) do
     room = get_room_by_name!(name)
     id = room.id
     {team1ID, team2ID} = get_team_ids(id)
