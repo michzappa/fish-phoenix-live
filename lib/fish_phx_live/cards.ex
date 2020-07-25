@@ -111,7 +111,7 @@ defmodule FishPhxLive.Cards do
 
   def is_card_in_play(room_id, card) do
     players_in_room = Players.get_players_in_room(room_id)
-    hands_in_room = Enum.map(players_in_room, fn id -> Players.get_player!(id).hand end)
+    hands_in_room = Enum.map(players_in_room, fn player -> player.hand end)
     IO.inspect(hands_in_room)
 
     List.foldr(hands_in_room, false, fn hand, acc ->

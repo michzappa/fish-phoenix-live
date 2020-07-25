@@ -138,11 +138,6 @@ defmodule FishPhxLiveWeb.FishLive do
                   Change halfsuit
                 </button>
               </form>
-              <ul>
-            <%= for card <- Cards.get_cards_in_halfsuit(@selected_claim_halfsuit) do %>
-              <li><%= card %></li>
-            <% end %>
-            </ul>
 
             <form phx-submit="make-claim">
               <%= if is_nil(Enum.at(@teammates, 0)) do %>
@@ -151,11 +146,10 @@ defmodule FishPhxLiveWeb.FishLive do
                 <label for="teammate1-cards">
                   <%= Enum.at(@teammates, 0).name %>
                 </label>
-                <select id="teammate1-cards" name="<%= Enum.at(@teammates, 0).id %>" multiple>
-                  <%= for card <- Cards.get_cards_in_halfsuit(@selected_claim_halfsuit) do %>
-                    <option value=<%= card %>><%= card %></option>
-                  <% end %>
-                </select>
+                <%= multiple_select(:claim,
+                String.to_atom(Integer.to_string(Enum.at(@teammates, 0).id)),
+                Enum.map(Cards.get_cards_in_halfsuit(@selected_claim_halfsuit),
+                fn card -> {String.to_atom(card), card} end)) %>
               <% end %>
 
               <%= if is_nil(Enum.at(@teammates, 1)) do %>
@@ -164,11 +158,10 @@ defmodule FishPhxLiveWeb.FishLive do
                 <label for="teammate2-cards">
                   <%= Enum.at(@teammates, 1).name %>
                 </label>
-                <select id="teammate2-cards" name="<%= Enum.at(@teammates, 1).id %>" multiple>
-                  <%= for card <- Cards.get_cards_in_halfsuit(@selected_claim_halfsuit) do %>
-                    <option value=<%= card %>><%= card %></option>
-                  <% end %>
-                </select>
+                <%= multiple_select(:claim,
+                String.to_atom(Integer.to_string(Enum.at(@teammates, 1).id)),
+                Enum.map(Cards.get_cards_in_halfsuit(@selected_claim_halfsuit),
+                fn card -> {String.to_atom(card), card} end)) %>
               <% end %>
 
               <%= if is_nil(Enum.at(@teammates, 2)) do %>
@@ -177,11 +170,10 @@ defmodule FishPhxLiveWeb.FishLive do
                 <label for="teammate3-cards">
                   <%= Enum.at(@teammates, 2).name %>
                 </label>
-                <select id="teammate3-cards" name="<%= Enum.at(@teammates, 2).id %>" multiple>
-                  <%= for card <- Cards.get_cards_in_halfsuit(@selected_claim_halfsuit) do %>
-                    <option value=<%= card %>><%= card %></option>
-                  <% end %>
-                </select>
+                <%= multiple_select(:claim,
+                String.to_atom(Integer.to_string(Enum.at(@teammates, 2).id)),
+                Enum.map(Cards.get_cards_in_halfsuit(@selected_claim_halfsuit),
+                fn card -> {String.to_atom(card), card} end)) %>
               <% end %>
 
               <button type="submit">
@@ -196,8 +188,23 @@ defmodule FishPhxLiveWeb.FishLive do
   end
 
   # make claim event
-  def handle_event("make-claim", input, socket) do
-    IO.inspect(input)
+  def handle_event("make-claim", %{"claim" => player_card_map}, socket) do
+    IO.inspect(player_card_map)
+    IO.inspect(socket.assigns.team.id)
+    case Teams.make_claim(socket.assigns.team.id, player_card_map) do
+      :not_in_play ->
+        socket = put_flash(socket, :error, "the specified cards are not all in play")
+        {:noreply, socket}
+      :invalid ->
+        socket = put_flash(socket, :error, "invalid claim")
+        {:noreply, socket}
+      {:ok, _team} ->
+        PubSub.broadcast!(:fish_pubsub, "room:#{socket.assigns.room_name}", "update")
+        {:noreply, socket}
+    end
+  end
+
+  def handle_event("make-claim", _, socket) do
     {:noreply, socket}
   end
 

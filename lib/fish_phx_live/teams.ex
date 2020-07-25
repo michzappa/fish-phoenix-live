@@ -30,7 +30,6 @@ defmodule FishPhxLive.Teams do
     cards = Map.values(player_card_map)
     cards = List.flatten(cards)
 
-    team_id = String.to_integer(team_id)
     room_id = get_team!(team_id).room_id
 
     opponent_team_id =
@@ -87,7 +86,7 @@ defmodule FishPhxLive.Teams do
     new_claims = [Enum.join(cards, " ") | team.claims]
 
     team_players = Players.get_players_on_team(team_id)
-    team_players = Enum.map(team_players, fn id -> Players.get_player!(id).name end)
+    team_players = Enum.map(team_players, fn player -> Players.get_player!(player.id).name end)
 
     Rooms.update_move(
       room_id,
@@ -111,8 +110,8 @@ defmodule FishPhxLive.Teams do
     opponent_players = Players.get_players_on_team(opponent_team_id)
 
     # removing all the cards from every player in the game, if they exist in their hand
-    Enum.each(team_players, &take_all_cards_from_player(&1, cards))
-    Enum.each(opponent_players, &take_all_cards_from_player(&1, cards))
+    Enum.each(team_players, &take_all_cards_from_player(&1.id, cards))
+    Enum.each(opponent_players, &take_all_cards_from_player(&1.id, cards))
 
     add_claim_to_team(room_id, opponent_team_id, cards)
   end
