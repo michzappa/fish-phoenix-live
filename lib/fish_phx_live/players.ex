@@ -36,7 +36,7 @@ defmodule FishPhxLive.Players do
     query =
       from player in Player,
         where: player.room_id == ^room_id,
-        select: player.id
+        select: player
 
     Repo.all(query)
   end
@@ -45,7 +45,7 @@ defmodule FishPhxLive.Players do
     query =
       from player in Player,
         where: player.team_id == ^team_id,
-        select: player.id
+        select: player
 
     Repo.all(query)
   end

@@ -2,18 +2,27 @@ defmodule FishPhxLiveWeb.FishLive do
   use FishPhxLiveWeb, :live_view
 
   alias FishPhxLive.Rooms
+  alias FishPhxLive.Teams
+  alias FishPhxLive.Players
 
   def mount(_params, _session, socket) do
     socket =
       assign(socket,
-        joined_game: false,
         room_to_be_created: "",
         room_to_be_deleted: "",
         room_to_be_joined: "",
         joining_player_name: "",
+        all_rooms: Rooms.list_rooms(),
+        # boolean for displaying values only relevant after the player has joined a game
+        joined_game: false,
         room_name: "",
         player_name: "",
-        all_rooms: Rooms.list_rooms()
+        room: %{},
+        player: %{},
+        team: %{},
+        teammates: [],
+        opponent_team: %{},
+        opponents: []
       )
 
     {:ok, socket}
@@ -46,10 +55,19 @@ defmodule FishPhxLiveWeb.FishLive do
             <li><%= room.name %> </li>
         <% end %>
       </ul>
-      <p><%= @room_name %></p>
-      <p><%= @player_name %></p>
       <%= if @joined_game do %>
-        <p><%= @player.hand %></p>
+        <p>Room Name: <%= @room_name %></p>
+        <p>Player Name: <%= @player_name %></p>
+        <ul>
+          Teammates
+          <%= for teammate <- @teammates do %>
+            <li><%= teammate.name %> </li>
+          <% end %>
+        </ul>
+        <p>Team Score: <%= Kernel.length(@team.claims) %> </p>
+        <p>Hand: <%= @player.hand %></p>
+        <p>Last Move: <%= @room.move %></p>
+        <p>Current Turn: <%= @room.turn %></p>
       <%end %>
     """
   end
@@ -96,16 +114,24 @@ defmodule FishPhxLiveWeb.FishLive do
         {:noreply, socket}
 
       player ->
-        socket =
-          assign(
-            socket,
-            room_name: room_name,
-            player_name: player_name,
-            player: player
-          )
+        socket = update_socket_assigns(socket, room_name, player)
 
-        socket = update(socket, :joined_game, fn _ -> true end)
+        socket = assign(socket, :joined_game, true)
         {:noreply, socket}
     end
+  end
+
+  def update_socket_assigns(socket, room_name, player) do
+    socket =
+      assign(socket,
+        room_name: room_name,
+        player_name: player.name,
+        room: Rooms.get_room_by_name!(room_name),
+        player: player,
+        team: Teams.get_team!(player.team_id),
+        teammates: Players.get_players_on_team(player.team_id)
+      )
+
+    socket
   end
 end
