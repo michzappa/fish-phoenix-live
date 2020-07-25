@@ -15,7 +15,7 @@ config :fish_phx_live, FishPhxLiveWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "Rd4X/YtqC3Z60ghaAUmmiM6xCCk7Q2kQ1BYA8s5py56JuIaLcMQZ+EuAeOrammkm",
   render_errors: [view: FishPhxLiveWeb.ErrorView, accepts: ~w(html json), layout: false],
-  pubsub_server: FishPhxLive.PubSub,
+  pubsub_server: :fish_pubsub,
   live_view: [signing_salt: "F1jHEDnF"]
 
 # Configures Elixir's Logger

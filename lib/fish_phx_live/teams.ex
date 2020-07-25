@@ -24,6 +24,7 @@ defmodule FishPhxLive.Teams do
       1 -> team_id + 1
     end
   end
+
   # second parameter is a map of %{id=>card}
   def make_claim(team_id, player_card_map) do
     cards = Map.values(player_card_map)

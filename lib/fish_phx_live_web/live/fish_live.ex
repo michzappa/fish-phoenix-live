@@ -4,6 +4,7 @@ defmodule FishPhxLiveWeb.FishLive do
   alias FishPhxLive.Rooms
   alias FishPhxLive.Teams
   alias FishPhxLive.Players
+  alias Phoenix.PubSub
 
   def mount(_params, _session, socket) do
     socket =
@@ -59,21 +60,11 @@ defmodule FishPhxLiveWeb.FishLive do
       <%= if @joined_game do %>
         <p>Room Name: <%= @room_name %></p>
         <p>Player Name: <%= @player_name %></p>
-        <ul>
-          Teammates
-          <%= for teammate <- @teammates do %>
-            <li><%= teammate.name %> </li>
-          <% end %>
-        </ul>
+        <p>Teammates: <%= Enum.join(Enum.map(@teammates, fn teammate -> teammate.name end),", ") %>
         <p>Team Score: <%= Kernel.length(@team.claims) %> </p>
-        <ul>
-          Opponents
-          <%= for opponent <- @opponents do %>
-            <li><%= opponent.name %> </li>
-          <% end %>
-        </ul>
+        <p>Opponents: <%= Enum.join(Enum.map(@opponents, fn opponent -> opponent.name end),", ") %>
         <p>Opponents Score: <%= Kernel.length(@opponent_team.claims) %> </p>
-        <p>Hand: <%= @player.hand %></p>
+        <p>Hand: <%= Enum.join(@player.hand, ", ") %></p>
         <p>Last Move: <%= @room.move %></p>
         <p>Current Turn: <%= @room.turn %></p>
       <%end %>
@@ -125,8 +116,15 @@ defmodule FishPhxLiveWeb.FishLive do
         socket = update_socket_assigns(socket, room_name, player)
 
         socket = assign(socket, :joined_game, true)
+        PubSub.subscribe(:fish_pubsub, "room:#{room_name}")
+        PubSub.broadcast!(:fish_pubsub, "room:#{room_name}", "update")
         {:noreply, socket}
     end
+  end
+
+  def handle_info("update", socket) do
+    socket = update_socket_assigns(socket, socket.assigns.room_name, socket.assigns.player)
+    {:noreply, socket}
   end
 
   def update_socket_assigns(socket, room_name, player) do

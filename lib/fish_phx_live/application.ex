@@ -12,7 +12,7 @@ defmodule FishPhxLive.Application do
       # Start the Telemetry supervisor
       FishPhxLiveWeb.Telemetry,
       # Start the PubSub system
-      {Phoenix.PubSub, name: FishPhxLive.PubSub},
+      {Phoenix.PubSub, name: :fish_pubsub},
       # Start the Endpoint (http/https)
       FishPhxLiveWeb.Endpoint
       # Start a worker by calling: FishPhxLive.Worker.start_link(arg)
