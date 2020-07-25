@@ -17,6 +17,13 @@ defmodule FishPhxLive.Teams do
     Repo.get!(Team, id)
   end
 
+  # given a team id, returns the id of their opponent in their room
+  def get_opponent_team_id(team_id) do
+    case rem(team_id, 2) do
+      0 -> team_id - 1
+      1 -> team_id + 1
+    end
+  end
   # second parameter is a map of %{id=>card}
   def make_claim(team_id, player_card_map) do
     cards = Map.values(player_card_map)

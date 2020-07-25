@@ -55,6 +55,7 @@ defmodule FishPhxLiveWeb.FishLive do
             <li><%= room.name %> </li>
         <% end %>
       </ul>
+
       <%= if @joined_game do %>
         <p>Room Name: <%= @room_name %></p>
         <p>Player Name: <%= @player_name %></p>
@@ -65,6 +66,13 @@ defmodule FishPhxLiveWeb.FishLive do
           <% end %>
         </ul>
         <p>Team Score: <%= Kernel.length(@team.claims) %> </p>
+        <ul>
+          Opponents
+          <%= for opponent <- @opponents do %>
+            <li><%= opponent.name %> </li>
+          <% end %>
+        </ul>
+        <p>Opponents Score: <%= Kernel.length(@opponent_team.claims) %> </p>
         <p>Hand: <%= @player.hand %></p>
         <p>Last Move: <%= @room.move %></p>
         <p>Current Turn: <%= @room.turn %></p>
@@ -129,7 +137,9 @@ defmodule FishPhxLiveWeb.FishLive do
         room: Rooms.get_room_by_name!(room_name),
         player: player,
         team: Teams.get_team!(player.team_id),
-        teammates: Players.get_players_on_team(player.team_id)
+        teammates: Players.get_players_on_team(player.team_id),
+        opponent_team: Teams.get_team!(Teams.get_opponent_team_id(player.team_id)),
+        opponents: Players.get_players_on_team(Teams.get_opponent_team_id(player.team_id))
       )
 
     socket
