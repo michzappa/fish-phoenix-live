@@ -23,7 +23,9 @@ defmodule FishPhxLiveWeb.FishLive do
         team: %{},
         teammates: [],
         opponent_team: %{},
-        opponents: []
+        opponents: [],
+
+        asked_for_card: ""
       )
 
     {:ok, socket}
@@ -67,10 +69,29 @@ defmodule FishPhxLiveWeb.FishLive do
         <p>Hand: <%= Enum.join(@player.hand, ", ") %></p>
         <p>Last Move: <%= @room.move %></p>
         <p>Current Turn: <%= @room.turn %></p>
+
+        <form phx-submit="ask-for-card">
+          <select id="opponents-select" name="asked_player">
+            <%= for opponent <- @opponents do %>
+              <option value="<%= opponent.id %>"><%= opponent.name %></option>
+            <% end %>
+          </select>
+          <input type="text" name="card" value="<%= @asked_for_card %>"
+                placeholder="Card"/>
+          <button type="submit">
+            Ask For Card
+          </button>
+        </form>
       <%end %>
     """
   end
 
+  # Ask for card event
+  def handle_event("ask-for-card", %{"asked_player" => asked_player, "card" => card}, socket) do
+    Players.ask_for_card(socket.assigns.player.id, asked_player, card, socket.assigns.room.id)
+    PubSub.broadcast!(:fish_pubsub, "room:#{socket.assigns.room_name}", "update")
+    {:noreply, socket}
+  end
   # Create Room Event, making sure the field is not empty
   def handle_event(
         "create/delete-room",
@@ -123,7 +144,13 @@ defmodule FishPhxLiveWeb.FishLive do
   end
 
   def handle_info("update", socket) do
-    socket = update_socket_assigns(socket, socket.assigns.room_name, socket.assigns.player)
+    socket =
+      update_socket_assigns(
+        socket,
+        socket.assigns.room_name,
+        socket.assigns.player
+      )
+
     {:noreply, socket}
   end
 
@@ -133,7 +160,7 @@ defmodule FishPhxLiveWeb.FishLive do
         room_name: room_name,
         player_name: player.name,
         room: Rooms.get_room_by_name!(room_name),
-        player: player,
+        player: Players.get_player!(player.id),
         team: Teams.get_team!(player.team_id),
         teammates: Players.get_players_on_team(player.team_id),
         opponent_team: Teams.get_team!(Teams.get_opponent_team_id(player.team_id)),
