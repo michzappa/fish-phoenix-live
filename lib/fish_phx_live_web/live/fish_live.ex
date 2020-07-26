@@ -194,19 +194,23 @@ defmodule FishPhxLiveWeb.FishLive do
   def handle_event("make-claim", %{"claim" => player_card_map}, socket) do
     IO.inspect(player_card_map)
     IO.inspect(socket.assigns.team.id)
+
     case Teams.make_claim(socket.assigns.team.id, player_card_map) do
       :not_in_play ->
         socket = put_flash(socket, :error, "The specified cards are not all in play")
         {:noreply, socket}
+
       :invalid ->
         socket = put_flash(socket, :error, "Invalid claim")
         {:noreply, socket}
+
       {:ok, _team} ->
         PubSub.broadcast!(:fish_pubsub, "room:#{socket.assigns.room_name}", "update-room")
         {:noreply, socket}
     end
   end
 
+  # handling for any other shape of input data, for whatever reason
   def handle_event("make-claim", _, socket) do
     {:noreply, socket}
   end
@@ -252,7 +256,7 @@ defmodule FishPhxLiveWeb.FishLive do
       ) do
     Rooms.delete_room(room_name)
     socket = update(socket, :all_rooms, fn _old_list -> Rooms.list_rooms() end)
-    PubSub.broadcast!(:fish_pubsub, "fish" ,"update-rooms")
+    PubSub.broadcast!(:fish_pubsub, "fish", "update-rooms")
     {:noreply, socket}
   end
 
@@ -268,7 +272,7 @@ defmodule FishPhxLiveWeb.FishLive do
 
       _ ->
         socket = update(socket, :all_rooms, fn _old_list -> Rooms.list_rooms() end)
-        PubSub.broadcast!(:fish_pubsub, "fish" ,"update-rooms")
+        PubSub.broadcast!(:fish_pubsub, "fish", "update-rooms")
         {:noreply, socket}
     end
   end
@@ -296,6 +300,7 @@ defmodule FishPhxLiveWeb.FishLive do
     end
   end
 
+  # message sent whenever an action occurs in the room, updates the data in the socket from the database
   def handle_info("update-room", socket) do
     socket =
       update_socket_assigns(
